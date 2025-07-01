@@ -1,69 +1,77 @@
-# Get arguments passed from ARM template
-param (
-    [string]$AdminUsername,
-    [string]$AdminPassword
-)
+# Ensure script runs as administrator
+if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(`
+    [Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Error "You must run this script as Administrator!"
+    exit 1
+}
 
-# Disable Windows Defender Firewall
+Write-Host "=== Starting VM setup script ==="
+
+# Disable Windows Defender Firewall on all profiles
+Write-Host "Disabling Windows Firewall..."
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 
-# Set Desktop path for the admin user
-$desktopPath = "C:\Users\$AdminUsername\Desktop"
+# Install Chocolatey
+Write-Host "Installing Chocolatey..."
+Set-ExecutionPolicy Bypass -Scope Process -Force
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
-# Helper function to install apps
-function Install-App {
-    param (
-        [string]$url,
-        [string]$installerName,
-        [string]$arguments = ""
-    )
-    $output = "$env:TEMP\$installerName"
-    Invoke-WebRequest -Uri $url -OutFile $output -UseBasicParsing
-    Start-Process -FilePath $output -ArgumentList $arguments -Wait
-}
+# Wait to ensure choco is available in PATH
+Start-Sleep -Seconds 5
 
-# Install Google Chrome
-Install-App -url "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -installerName "chrome_installer.exe" -arguments "/silent /install"
+# Install required applications via Chocolatey
+Write-Host "Installing Google Chrome..."
+choco install googlechrome -y --force
 
-# Install VS Code
-Install-App -url "https://update.code.visualstudio.com/latest/win32-x64-user/stable" -installerName "vscode_installer.exe" -arguments "/silent"
+Write-Host "Installing Visual Studio Code..."
+choco install vscode -y --force
 
-# Install Power BI Desktop
-Install-App -url "https://download.microsoft.com/download/6/3/2/632DC9EC-4F49-4D34-A2D6-9F8CD64F8A7C/PBIDesktopSetup_x64.exe" -installerName "PBIDesktopSetup_x64.exe" -arguments "/quiet"
+Write-Host "Installing Power BI Desktop..."
+choco install powerbi -y --force
 
-# Create desktop shortcuts
-$WScriptShell = New-Object -ComObject WScript.Shell
+# Paths for desktop shortcuts
+$desktop = [Environment]::GetFolderPath('Desktop')
 
-# Chrome shortcut
+# Create shortcuts for applications
+Write-Host "Creating shortcuts on Desktop..."
+
+# Shortcut for Google Chrome
+$chromeShortcut = "$desktop\Google Chrome.lnk"
 $chromePath = "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
 if (Test-Path $chromePath) {
-    $chromeShortcut = "$desktopPath\Google Chrome.lnk"
-    $chromeLink = $WScriptShell.CreateShortcut($chromeShortcut)
-    $chromeLink.TargetPath = $chromePath
-    $chromeLink.Save()
+    $WshShell = New-Object -ComObject WScript.Shell
+    $shortcut = $WshShell.CreateShortcut($chromeShortcut)
+    $shortcut.TargetPath = $chromePath
+    $shortcut.Save()
 }
 
-# VS Code shortcut
-$vsCodePath = "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe"
-if (Test-Path $vsCodePath) {
-    $vsCodeShortcut = "$desktopPath\Visual Studio Code.lnk"
-    $vsCodeLink = $WScriptShell.CreateShortcut($vsCodeShortcut)
-    $vsCodeLink.TargetPath = $vsCodePath
-    $vsCodeLink.Save()
+# Shortcut for Visual Studio Code
+$vscodeShortcut = "$desktop\Visual Studio Code.lnk"
+$vscodePath = "${env:ProgramFiles}\Microsoft VS Code\Code.exe"
+if (Test-Path $vscodePath) {
+    $shortcut = $WshShell.CreateShortcut($vscodeShortcut)
+    $shortcut.TargetPath = $vscodePath
+    $shortcut.Save()
 }
 
-# Power BI shortcut
+# Shortcut for Power BI Desktop
+$powerBIShortcut = "$desktop\Power BI Desktop.lnk"
 $powerBIPath = "${env:ProgramFiles}\Microsoft Power BI Desktop\bin\PBIDesktop.exe"
 if (Test-Path $powerBIPath) {
-    $powerBILink = $WScriptShell.CreateShortcut("$desktopPath\Power BI Desktop.lnk")
-    $powerBILink.TargetPath = $powerBIPath
-    $powerBILink.Save()
+    $shortcut = $WshShell.CreateShortcut($powerBIShortcut)
+    $shortcut.TargetPath = $powerBIPath
+    $shortcut.Save()
 }
 
-# Azure Portal browser shortcut (.url file instead of .lnk)
-$azurePortalShortcut = "$desktopPath\Azure Portal.url"
-Set-Content -Path $azurePortalShortcut -Value "[InternetShortcut]`nURL=https://portal.azure.com"
+# Browser shortcut to Azure Portal
+$azurePortalShortcut = "$desktop\Azure Portal.url"
+$azurePortalContent = "[InternetShortcut]`nURL=https://portal.azure.com"
+$azurePortalContent | Out-File -Encoding ASCII $azurePortalShortcut
 
-# Create VMDetails.txt with actual provided username and password
-$vmDetails = "Username: $AdminUsername`nPassword: $AdminPassword"
-Set-Content -Path "$desktopPath\VMDetails.txt" -Value $vmDetails
+# Create VMDetails.txt with username & password
+$vmDetailsFile = "$desktop\VMDetails.txt"
+"Username: $args[0]" | Out-File -FilePath $vmDetailsFile
+"Password: $args[1]" | Out-File -FilePath $vmDetailsFile -Append
+
+Write-Host "`n✅ VM setup complete. Applications installed, shortcuts created, and VMDetails.txt generated."
