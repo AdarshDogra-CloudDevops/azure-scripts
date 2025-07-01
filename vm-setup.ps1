@@ -64,14 +64,19 @@ if (Test-Path $powerBIPath) {
     $shortcut.Save()
 }
 
-# Browser shortcut to Azure Portal
-$azurePortalShortcut = "$desktop\Azure Portal.url"
-$azurePortalContent = "[InternetShortcut]`nURL=https://portal.azure.com"
-$azurePortalContent | Out-File -Encoding ASCII $azurePortalShortcut
+# Create browser shortcut to Azure Portal (opens Chrome directly to the portal URL)
+Write-Host "Creating Azure Portal shortcut on Desktop..."
+$azurePortalShortcut = "$desktop\Azure Portal.lnk"
+if (Test-Path $chromePath) {
+    $shortcut = $WshShell.CreateShortcut($azurePortalShortcut)
+    $shortcut.TargetPath = $chromePath
+    $shortcut.Arguments = "https://portal.azure.com"
+    $shortcut.IconLocation = $chromePath
+    $shortcut.Save()
+}
+
 
 # Create VMDetails.txt with username & password
 $vmDetailsFile = "$desktop\VMDetails.txt"
-"Username: $args[0]" | Out-File -FilePath $vmDetailsFile
-"Password: $args[1]" | Out-File -FilePath $vmDetailsFile -Append
-
-Write-Host "`n✅ VM setup complete. Applications installed, shortcuts created, and VMDetails.txt generated."
+"Username: $($args[0])" | Out-File -FilePath $vmDetailsFile -Encoding UTF8
+"Password: $($args[1])" | Out-File -FilePath $vmDetailsFile -Append -Encoding UTF8
