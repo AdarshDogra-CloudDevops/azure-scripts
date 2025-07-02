@@ -1,5 +1,5 @@
 # Ensure script runs as administrator
-if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(`
+if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Error "You must run this script as Administrator!"
     exit 1
@@ -17,7 +17,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
-# Wait a bit to ensure choco is in PATH
+# Wait to ensure choco is in PATH
 Start-Sleep -Seconds 5
 
 # Install required applications via Chocolatey
@@ -30,7 +30,7 @@ choco install vscode -y --force
 Write-Host "Installing Power BI Desktop..."
 choco install powerbi -y --force
 
-# Create a secondary script for shortcut & VMDetails creation
+# Create secondary PowerShell script
 $secondaryScript = @'
 $desktop = [Environment]::GetFolderPath("Desktop")
 $WshShell = New-Object -ComObject WScript.Shell
@@ -62,11 +62,21 @@ $scriptPath = "C:\CreateShortcuts.ps1"
 $secondaryScript | Out-File -FilePath $scriptPath -Encoding UTF8
 Write-Host "Secondary script created at $scriptPath"
 
-# Schedule the secondary script to run silently at next logon for azureadmin
-$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User "azureadmin"
-Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CreateShortcutsAtLogon" -Description "Create Azure Portal shortcut and VMDetails.txt silently" -User "azureadmin" -RunLevel Highest -Force
+# Create VBScript launcher
+$vbscript = @"
+Set objShell = CreateObject("Wscript.Shell")
+objShell.Run "powershell.exe -ExecutionPolicy Bypass -File `"$scriptPath`"", 0, False
+"@
 
-Write-Host "Scheduled task 'CreateShortcutsAtLogon' created. It will run silently at next login of azureadmin."
+$vbscriptPath = "C:\launch-hidden.vbs"
+$vbscript | Out-File -FilePath $vbscriptPath -Encoding ASCII
+Write-Host "VBScript launcher created at $vbscriptPath"
+
+# Schedule the VBScript launcher to run completely hidden at next login
+$action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptPath`""
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User "azureadmin"
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CreateShortcutsAtLogon" -Description "Create Azure Portal shortcut and VMDetails.txt silently using VBScript" -User "azureadmin" -RunLevel Highest -Force
+
+Write-Host "Scheduled task 'CreateShortcutsAtLogon' created. It will run completely silently at next login of azureadmin."
 
 Write-Host "✅ VM setup complete. Applications installed; shortcuts and VMDetails will be created silently at next login."
