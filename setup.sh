@@ -47,6 +47,7 @@ echo "📁 Creating desktop shortcuts..."
 DESKTOP_PATH="/home/azureadmin/Desktop"
 mkdir -p "$DESKTOP_PATH"
 
+# Azure Portal shortcut
 echo "[Desktop Entry]
 Name=Azure Portal
 Exec=/usr/bin/google-chrome-stable https://portal.azure.com
@@ -54,13 +55,20 @@ Icon=google-chrome
 Type=Application
 Categories=Network;" > "$DESKTOP_PATH/AzurePortal.desktop"
 
-chmod +x "$DESKTOP_PATH/AzurePortal.desktop"
+# Google Chrome shortcut
+cp /usr/share/applications/google-chrome.desktop "$DESKTOP_PATH/"
+chmod +x "$DESKTOP_PATH/google-chrome.desktop"
+
+# VS Code shortcut
+cp /usr/share/applications/code.desktop "$DESKTOP_PATH/"
+chmod +x "$DESKTOP_PATH/code.desktop"
 
 # Create VMDetails.txt
 echo "👤 Writing VM credentials to VMDetails.txt..."
 echo "Username: azureadmin" > "$DESKTOP_PATH/VMDetails.txt"
 echo "Password: P@ssword1234!" >> "$DESKTOP_PATH/VMDetails.txt"
 
+# Set ownership
 chown -R azureadmin:azureadmin "$DESKTOP_PATH"
 
-echo "✅ Ubuntu GUI setup complete. Connect via RDP on port 3389. Chrome, VS Code, shortcuts created."
+echo "✅ Ubuntu GUI setup complete. Connect via RDP on port 3389. Chrome, VS Code, and shortcuts created."
