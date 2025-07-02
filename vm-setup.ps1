@@ -30,7 +30,7 @@ choco install vscode -y --force
 Write-Host "Installing Power BI Desktop..."
 choco install powerbi -y --force
 
-# Create a second script for shortcut & VMDetails creation
+# Create a secondary script for shortcut & VMDetails creation
 $secondaryScript = @'
 $desktop = [Environment]::GetFolderPath("Desktop")
 $WshShell = New-Object -ComObject WScript.Shell
@@ -62,11 +62,11 @@ $scriptPath = "C:\CreateShortcuts.ps1"
 $secondaryScript | Out-File -FilePath $scriptPath -Encoding UTF8
 Write-Host "Secondary script created at $scriptPath"
 
-# Schedule the secondary script to run at next logon for azureadmin
-$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -File `"$scriptPath`""
+# Schedule the secondary script to run silently at next logon for azureadmin
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`""
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User "azureadmin"
-Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CreateShortcutsAtLogon" -Description "Create Azure Portal shortcut and VMDetails.txt" -User "azureadmin" -RunLevel Highest -Force
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CreateShortcutsAtLogon" -Description "Create Azure Portal shortcut and VMDetails.txt silently" -User "azureadmin" -RunLevel Highest -Force
 
-Write-Host "Scheduled task 'CreateShortcutsAtLogon' created. It will run at next login of azureadmin."
+Write-Host "Scheduled task 'CreateShortcutsAtLogon' created. It will run silently at next login of azureadmin."
 
-Write-Host "✅ VM setup complete. Applications installed; shortcuts and VMDetails will be created at next login."
+Write-Host "✅ VM setup complete. Applications installed; shortcuts and VMDetails will be created silently at next login."
