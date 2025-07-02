@@ -70,15 +70,20 @@ if (Test-Path $powerBIPath) {
 # Create browser shortcut to Azure Portal (opens Chrome directly to the portal URL)
 Write-Host "Creating Azure Portal shortcut on Desktop..."
 $azurePortalShortcut = "$desktop\Azure Portal.lnk"
+$chromePath = "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe"  # match deployed path exactly
+
 if (Test-Path $chromePath) {
+    $WshShell = New-Object -ComObject WScript.Shell
     $shortcut = $WshShell.CreateShortcut($azurePortalShortcut)
     $shortcut.TargetPath = $chromePath
     $shortcut.Arguments = "https://portal.azure.com"
     $shortcut.IconLocation = $chromePath
     $shortcut.Save()
+    Write-Host "Azure Portal shortcut created successfully."
 } else {
-    Write-Warning "Chrome not found, Azure Portal shortcut not created."
+    Write-Warning "Chrome not found at expected path ($chromePath), Azure Portal shortcut not created."
 }
+
 
 # Create VMDetails.txt with username & password
 Write-Host "Creating VMDetails.txt on Desktop..."
