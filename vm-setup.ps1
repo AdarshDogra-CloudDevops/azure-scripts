@@ -32,6 +32,10 @@ choco install powerbi -y --force
 
 # Paths for desktop shortcuts
 $desktop = [Environment]::GetFolderPath('Desktop')
+Write-Host "Resolved Desktop path: $desktop"
+
+# Initialize WshShell **once, always**
+$WshShell = New-Object -ComObject WScript.Shell
 
 # Create shortcuts for applications
 Write-Host "Creating shortcuts on Desktop..."
@@ -40,7 +44,6 @@ Write-Host "Creating shortcuts on Desktop..."
 $chromeShortcut = "$desktop\Google Chrome.lnk"
 $chromePath = "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe"
 if (Test-Path $chromePath) {
-    $WshShell = New-Object -ComObject WScript.Shell
     $shortcut = $WshShell.CreateShortcut($chromeShortcut)
     $shortcut.TargetPath = $chromePath
     $shortcut.Save()
@@ -73,10 +76,14 @@ if (Test-Path $chromePath) {
     $shortcut.Arguments = "https://portal.azure.com"
     $shortcut.IconLocation = $chromePath
     $shortcut.Save()
+} else {
+    Write-Warning "Chrome not found, Azure Portal shortcut not created."
 }
 
-
 # Create VMDetails.txt with username & password
+Write-Host "Creating VMDetails.txt on Desktop..."
 $vmDetailsFile = "$desktop\VMDetails.txt"
 "Username: $($args[0])" | Out-File -FilePath $vmDetailsFile -Encoding UTF8
 "Password: $($args[1])" | Out-File -FilePath $vmDetailsFile -Append -Encoding UTF8
+
+Write-Host "✅ VM setup complete. Applications installed, shortcuts created, and VMDetails.txt generated."
