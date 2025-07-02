@@ -70,7 +70,9 @@ if (Test-Path $powerBIPath) {
 # Create browser shortcut to Azure Portal (opens Chrome directly to the portal URL)
 Write-Host "Creating Azure Portal shortcut on Desktop..."
 $azurePortalShortcut = "$desktop\Azure Portal.lnk"
-$chromePath = "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe"  # match deployed path exactly
+
+# Updated to match your exact deployed path
+$chromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 
 if (Test-Path $chromePath) {
     $WshShell = New-Object -ComObject WScript.Shell
@@ -85,10 +87,17 @@ if (Test-Path $chromePath) {
 }
 
 
-# Create VMDetails.txt with username & password
+
+# Create VMDetails.txt with hardcoded username & password
 Write-Host "Creating VMDetails.txt on Desktop..."
 $vmDetailsFile = "$desktop\VMDetails.txt"
-"Username: $($args[0])" | Out-File -FilePath $vmDetailsFile -Encoding UTF8
-"Password: $($args[1])" | Out-File -FilePath $vmDetailsFile -Append -Encoding UTF8
+
+$hardcodedUsername = "azureadmin"
+$hardcodedPassword = "P@ssword1234!"
+
+"Username: $hardcodedUsername" | Out-File -FilePath $vmDetailsFile -Encoding UTF8
+"Password: $hardcodedPassword" | Out-File -FilePath $vmDetailsFile -Append -Encoding UTF8
+
+Write-Host "VMDetails.txt created successfully with hardcoded credentials."
 
 Write-Host "✅ VM setup complete. Applications installed, shortcuts created, and VMDetails.txt generated."
