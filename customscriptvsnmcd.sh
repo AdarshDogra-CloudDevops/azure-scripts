@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "=== Starting Ubuntu VM setup script with GUI ==="
+echo "=== Starting Ubuntu VM setup script "
 
 # Ensure script is run as root
 if [ "$(id -u)" -ne 0 ]; then
@@ -8,18 +8,22 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-# Update package list
-echo "🔄 Updating apt packages..."
+# Non-interactive frontend
+export DEBIAN_FRONTEND=noninteractive
+
+# Use Azure mirror (more stable on Azure VMs)
+sed -i 's|http://archive.ubuntu.com|http://azure.archive.ubuntu.com|g' /etc/apt/sources.list
+apt-get clean
 apt-get update -y
 
-#install unzip
+# install unzip
 echo "🔧 Installing unzip utility..."
 apt-get install -y unzip
 
-#install at
+# install at
 echo "🔧 Installing at utility..."
-apt-get install -y at
-systemctl enable --now atd
+apt-get install -y at || true
+systemctl enable --now atd || true
 
 # Install VS Code
 echo "🧠 Installing Visual Studio Code..."
@@ -33,20 +37,18 @@ apt-get install -y code
 echo "🌐 Installing Chromium browser..."
 apt-get install -y chromium-browser || apt-get install -y chromium
 
-#install docker
+# install docker
 echo "🐳 Installing Docker..."
 apt-get install -y docker.io
-
-# Enable Docker service
 systemctl enable docker
 systemctl start docker
 
-#install network miner
+# install network miner
 echo "🔍 Installing Network Miner..."   
 wget -q https://download.netresec.com/networkminer/NetworkMiner_3-0.zip -O /tmp/networkminer.zip
 unzip /tmp/networkminer.zip -d /opt/networkminer
-chmod +x /opt/networkminer/NetworkMiner.exe
+chmod +x /opt/networkminer/NetworkMiner_3-0/NetworkMiner.exe || true
 
+# auto shutdown in 5 mins
 echo "🕒 Scheduling auto-shutdown in 5 minutes..."
-echo "shutdown -h now" | at now + 5 minutes
-
+echo "shutdown -h now" | at now + 5 minutes || echo "⚠️ Failed to schedule shutdown"
