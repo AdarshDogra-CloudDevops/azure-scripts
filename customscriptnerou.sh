@@ -21,8 +21,13 @@ sudo usermod -aG sudo "$USERNAME"
 echo "✅ User $USERNAME created and added to sudo group."
 
 # Disable root SSH login
-sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+sudo sed -i '/^#\?PermitRootLogin/d' /etc/ssh/sshd_config
+echo "PermitRootLogin no" >> /etc/ssh/sshd_config
 echo "✅ Disabled SSH login for root."
+
+# Restart SSH service to apply root login change
+sudo systemctl restart sshd
+echo "🔄 SSH service restarted to apply changes."
 
 # Lock root account
 passwd -l root
