@@ -82,7 +82,10 @@ sudo systemctl start docker
 
 # install wireshark
 echo "📡 Installing Wireshark..."
-sudo apt-get install -y wireshark
+# Pre-answer the permission prompt
+echo "wireshark-common wireshark-common/install-setuid boolean true" | sudo debconf-set-selections
+# Prevent interactive prompts
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y wireshark
 sudo usermod -aG wireshark "$USERNAME"
 echo "Wireshark installed and user $USERNAME added to wireshark group."
 
@@ -94,7 +97,7 @@ sudo ufw enable
 echo "UFW firewall enabled and configured."
 
 
-# auto shutdown in 5 mins
+# auto shutdown in 15 mins
 echo "🕒 Scheduling auto-shutdown in 15 minutes..."
 echo "shutdown -h now" | at now + 15 minutes || echo "⚠️ Failed to schedule shutdown"
 
