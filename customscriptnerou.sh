@@ -38,7 +38,7 @@ echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/$USERNAME"
 chmod 0440 "/etc/sudoers.d/$USERNAME"
 
 
-sudo -u "$USERNAME" bash <<'EOF'
+sudo -i -u "$USERNAME" bash <<'EOF'
 echo "=== Running installation as: $(whoami) ==="               
 
 # Update package list
