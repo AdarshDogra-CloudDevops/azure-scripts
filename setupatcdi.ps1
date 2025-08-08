@@ -6,10 +6,14 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }   
 Write-Host "=== Starting VM setup script ==="
 
-#server manager pop up
+#disable windows firewall
 Write-Host "Disabling Windows Firewall..."
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 
+#disable server manager pop up
+Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask 
+
+Start-Sleep -Seconds 10  
 
 #installing Chocolatey
 Write-Host "Installing Chocolatey..."   
