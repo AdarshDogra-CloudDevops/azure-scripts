@@ -97,3 +97,11 @@ Write-Host "Scheduled task 'CreateShortcutsAtLogon' created. It will run complet
 Write-Host "✅ VM setup complete. Applications installed; shortcut will be created silently at next login."
 
 
+# Initialize disk 2 with GPT
+Initialize-Disk -Number 2 -PartitionStyle GPT
+
+# Create a single partition using all space
+New-Partition -DiskNumber 2 -UseMaximumSize -AssignDriveLetter |
+
+# Format the partition with NTFS
+Format-Volume -FileSystem NTFS -NewFileSystemLabel "DataDisk" -Confirm:$false
