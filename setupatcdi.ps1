@@ -6,6 +6,11 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }   
 Write-Host "=== Starting VM setup script ==="
 
+#server manager pop up
+Write-Host "Disabling Windows Firewall..."
+Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+
+
 #installing Chocolatey
 Write-Host "Installing Chocolatey..."   
 Set-ExecutionPolicy Bypass -Scope Process -Force
@@ -17,14 +22,16 @@ Start-Sleep -Seconds 5
 
 # Install required applications via Chocolatey  
 
-#install vs code
-Write-Host "Installing Visual Studio Code..."
-choco install vscode -y --force
-
 #install google chrome
 Write-Host "Installing Google Chrome..."    
 choco install googlechrome -y --force
 
+#install vs code
+Write-Host "Installing Visual Studio Code..."
+choco install vscode -y --force
+
+# Wait to ensure vs intsallaion is complete
+Start-Sleep -Seconds 15  
 
 #vs code shortcut
 $vsCodePath = "C:\Program Files\Microsoft VS Code\Code.exe"
@@ -38,6 +45,11 @@ if (Test-Path $vsCodePath) {
 } else {
     Write-Warning "VS Code not found at $vsCodePath. Shortcut not created."
 }
+
+# Create secondary PowerShell script
+$secondaryScript = @'
+$desktop = [Environment]::GetFolderPath("Desktop")
+$WshShell = New-Object -ComObject WScript.Shell
 
 #azure portal shortcut
 $desktop = [Environment]::GetFolderPath("Desktop")
@@ -54,6 +66,30 @@ if (Test-Path $chromePath) {
 } else {
     Write-Warning "Chrome not found at $chromePath. Azure Portal shortcut not created."
 }
+'@
 
+$scriptPath = "C:\CreateShortcuts.ps1"
+$secondaryScript | Out-File -FilePath $scriptPath -Encoding UTF8
+Write-Host "Secondary script created at $scriptPath"
+
+# Create VBScript launcher
+$escapedScriptPath = $scriptPath -replace '\\', '\\\\'  # escape backslashes for safety
+$vbscript = @"
+Set objShell = CreateObject("Wscript.Shell")
+objShell.Run "powershell.exe -ExecutionPolicy Bypass -File ""$escapedScriptPath""", 0, False
+"@
+$vbscriptPath = "C:\launch-hidden.vbs"
+$vbscript | Out-File -FilePath $vbscriptPath -Encoding ASCII
+Write-Host "VBScript launcher created at $vbscriptPath"
+
+
+# Schedule the VBScript launcher to run completely hidden at next login
+$action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptPath`""
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User "azureadmin"
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CreateShortcutsAtLogon" -Description "Create Azure Portal shortcut and VMDetails.txt silently using VBScript" -User "azureadmin" -RunLevel Highest -Force
+
+Write-Host "Scheduled task 'CreateShortcutsAtLogon' created. It will run completely silently at next login of azureadmin."
+
+Write-Host "✅ VM setup complete. Applications installed; shortcut will be created silently at next login."
 
 
