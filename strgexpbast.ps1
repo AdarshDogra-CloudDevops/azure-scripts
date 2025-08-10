@@ -2,8 +2,6 @@ param (
     [string]$Username,
     [string]$Password
 )
-
-
 #Ensure script runs as administrator
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -34,6 +32,12 @@ Start-Sleep -Seconds 5
 Write-Host "Installing Azure Storage Explorer..."
 choco install azurestorageexplorer -y --force  --ignore-checksums
 
+# Create secondary PowerShell script
+$secondaryScript = @'
+$Username = '$Username'
+$Password = '$Password'
+$desktop = [Environment]::GetFolderPath("Desktop")
+$WshShell = New-Object -ComObject WScript.Shell
 # Path to Desktop
 $desktop = [Environment]::GetFolderPath("Desktop")
 
@@ -46,5 +50,28 @@ $cred = New-Object System.Management.Automation.PSCredential ($Username, $secure
 $vmDetailsFile = "$desktop\VMDetails.txt"
 "Username: $($cred.UserName)" | Out-File -FilePath $vmDetailsFile -Encoding UTF8
 "Password: $($cred.GetNetworkCredential().Password)" | Out-File -FilePath $vmDetailsFile -Append -Encoding UTF8
+'@
+$scriptPath = "C:\CreateShortcuts.ps1"
+$secondaryScript | Out-File -FilePath $scriptPath -Encoding UTF8
+Write-Host "Secondary script created at $scriptPath"
 
-Write-Host "VMDetails.txt created on Desktop."
+# Create VBScript launcher
+$escapedScriptPath = $scriptPath -replace '\\', '\\\\'  # escape backslashes for safety
+$vbscript = @"
+Set objShell = CreateObject("Wscript.Shell")
+objShell.Run "powershell.exe -ExecutionPolicy Bypass -File ""$escapedScriptPath""", 0, False
+"@
+$vbscriptPath = "C:\launch-hidden.vbs"
+$vbscript | Out-File -FilePath $vbscriptPath -Encoding ASCII
+Write-Host "VBScript launcher created at $vbscriptPath"
+
+
+# Schedule the VBScript launcher to run completely hidden at next login
+$action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptPath`""
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User "azureadmin"
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CreateShortcutsAtLogon" -Description "Create Azure Portal shortcut and VMDetails.txt silently using VBScript" -User "azureadmin" -RunLevel Highest -Force
+
+Write-Host "Scheduled task 'CreateShortcutsAtLogon' created. It will run completely silently at next login of azureadmin."
+
+Write-Host "✅ VM setup complete. Applications installed; shortcuts and VMDetails will be created silently at next login."
+
