@@ -24,8 +24,19 @@ iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/in
 # Wait to ensure choco is in PATH
 Start-Sleep -Seconds 5  
 
-# Install required applications via Chocolatey  
+#install Azure storage explorer
+Write-Host "Installing Azure Storage Explorer..."
+choco install azurestorageexplorer -y --force  --ignore-checksums
 
-#install google chrome
-Write-Host "Installing Google Chrome..."    
-choco install googlechrome -y --force
+# Path to Desktop
+$desktop = [Environment]::GetFolderPath("Desktop")
+
+# Prompt for credentials
+$cred = Get-Credential -Message "Enter VM credentials"
+
+# Save username & password to file (not recommended for production)
+$vmDetailsFile = "$desktop\VMDetails.txt"
+"Username: $($cred.UserName)" | Out-File -FilePath $vmDetailsFile -Encoding UTF8
+"Password: $($cred.GetNetworkCredential().Password)" | Out-File -FilePath $vmDetailsFile -Append -Encoding UTF8
+
+Write-Host "VMDetails.txt created on Desktop."
