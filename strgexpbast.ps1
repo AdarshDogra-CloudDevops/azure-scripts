@@ -1,3 +1,9 @@
+param (
+    [string]$Username,
+    [string]$Password
+)
+
+
 #Ensure script runs as administrator
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -31,8 +37,10 @@ choco install azurestorageexplorer -y --force  --ignore-checksums
 # Path to Desktop
 $desktop = [Environment]::GetFolderPath("Desktop")
 
-# Prompt for credentials
-$cred = Get-Credential -Message "Enter VM credentials"
+# Fetching credentials
+$securePassword = ConvertTo-SecureString $Password -AsPlainText -Force
+$cred = New-Object System.Management.Automation.PSCredential ($Username, $securePassword)
+
 
 # Save username & password to file (not recommended for production)
 $vmDetailsFile = "$desktop\VMDetails.txt"
