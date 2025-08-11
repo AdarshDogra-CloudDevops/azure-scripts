@@ -66,10 +66,12 @@ Write-Host "VBScript launcher created at $vbscriptPath"
 
 # Schedule the VBScript launcher to run completely hidden at next login
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptPath`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User "azureadmin"
-Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CreateShortcutsAtLogon" -Description "Create Azure Portal shortcut and VMDetails.txt silently using VBScript" -User "azureadmin" -RunLevel Highest -Force
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $Username
 
-Write-Host "Scheduled task 'CreateShortcutsAtLogon' created. It will run completely silently at next login of azureadmin."
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CreateShortcutsAtLogon" -Description "Create Azure Portal shortcut and VMDetails.txt silently using VBScript" -User $Username
+ -RunLevel Highest -Force
+
+Write-Host "Scheduled task 'CreateShortcutsAtLogon' created. It will run completely silently at next login of User."
 
 Write-Host "✅ VM setup complete. Applications installed; shortcuts and VMDetails will be created silently at next login."
 
