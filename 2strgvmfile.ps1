@@ -29,7 +29,7 @@ $secondaryScript = @"
 `$adminUsername="$adminUsername"
 `$adminPassword="$adminPassword"
 $fileUrl = "https://$storageAccountName.blob.core.windows.net/$containerName/StrapiEcsReport.pdf"
-$saveFolder = "C:\Users\$adminUsername\Downloads"
+$saveFolder = [Environment]::GetFolderPath("Downloads")
 if (-not (Test-Path $saveFolder)) { New-Item -ItemType Directory -Path $saveFolder | Out-Null }
 
 
@@ -70,7 +70,5 @@ Write-Host "VBScript launcher created at $vbscriptPath"
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptPath`""
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $adminUsername
 
-Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "DownloadAtLogon" `
-    -Description "download file silently using VBScript" -User $adminUsername `
-    -RunLevel Highest -Force
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "DownloadAtLogon" -Description "download file silently using VBScript" -RunLevel Highest -Force
 write-host "Scheduled task 'DownloadAtLogon' created successfully."
