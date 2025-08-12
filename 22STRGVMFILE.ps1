@@ -29,26 +29,23 @@ Start-Sleep -Seconds 10
 $downloadFolder = "C:\Downloads"
 if (-not (Test-Path $downloadFolder)) { New-Item -ItemType Directory -Path $downloadFolder | Out-Null }
 
-# Create the script to download the file
+# Create the secondary download script
 $secondaryScript = @"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+\$uri = "https://$storageAccountName.blob.core.windows.net/$containerName/StrapiEcsReport.pdf"
 
-\$storageAccountName = "$storageAccountName"
-\$containerName = "$containerName"
-\$fileUrl = "https://$storageAccountName.blob.core.windows.net/$containerName/StrapiEcsReport.pdf"
-
-\$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-\$fileName = "StrapiEcsReport_\$timestamp.pdf"
-\$destinationPath = Join-Path "C:\Downloads" \$fileName
+# Create timestamped filename
+\$timestamp = (Get-Date).ToString("yyyy-MM-dd_HH-mm-ss")
+\$output = "C:\Downloads\StrapiEcsReport_\$timestamp.pdf"
 
 try {
-    Invoke-WebRequest -Uri \$fileUrl -OutFile \$destinationPath -ErrorAction Stop
+    Invoke-WebRequest -Uri \$uri -OutFile \$output -ErrorAction Stop
 } catch {
     Add-Content -Path "C:\Downloads\DownloadError.log" -Value ("[{0}] Error: {1}" -f (Get-Date), \$_)
 }
 "@
 
-$scriptPath = "C:\ContinuousDownload.ps1"
+$scriptPath = "C:\Downloads\download_script.ps1"
 $secondaryScript | Out-File -FilePath $scriptPath -Encoding UTF8
 Write-Host "Secondary script created at $scriptPath"
 
