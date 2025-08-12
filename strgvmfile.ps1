@@ -1,5 +1,6 @@
 param (
-    [string]$adminUsername
+    [string]$adminUsername,
+    [string]$adminPassword
 )
 
 #Ensure script runs as administrator
@@ -59,7 +60,8 @@ Write-Host "VBScript launcher created at $vbscriptPath"
 
 # Schedule the VBScript launcher to run completely hidden at next login
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptPath`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User $Username
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $adminUsername
 
-Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "CreateShortcutsAtLogon" -Description "Create Azure Portal shortcut and VMDetails.txt silently using VBScript" -User $Username
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "DownloadAtLogon" 
+-Description "download file silently using VBScript" -User $adminUsername
  -RunLevel Highest -Force
