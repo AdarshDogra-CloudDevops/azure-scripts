@@ -18,8 +18,10 @@ Write-Host "=== Starting VM setup script ==="
 Write-Host "Disabling Windows Firewall..."
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 
-# Disable Server Manager pop-up
-Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask 
+# Disable Server Manager pop-up if exists
+if (Get-ScheduledTask -TaskName ServerManager -ErrorAction SilentlyContinue) {
+    Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
+}
 
 Start-Sleep -Seconds 10  
 
@@ -30,7 +32,7 @@ $secondaryScript = @"
 `$containerName = "$containerName"
 `$fileUrl = "https://\$storageAccountName.blob.core.windows.net/\$containerName/StrapiEcsReport.pdf"
 
-`$saveFolder = [Environment]::GetFolderPath("Downloads")
+`$saveFolder = Join-Path \$HOME "Downloads"
 if (-not (Test-Path \$saveFolder)) { New-Item -ItemType Directory -Path \$saveFolder | Out-Null }
 
 try {
@@ -59,6 +61,7 @@ Register-ScheduledTask -Action $action -Trigger $trigger `
     -TaskName "DownloadEveryMinute" `
     -Description "Download StrapiEcsReport.pdf silently every minute" `
     -User $adminUsername `
+    -Password $adminPassword `
     -RunLevel Highest -Force
 
 Write-Host "✅ Scheduled task 'DownloadEveryMinute' created. Will run silently every minute."
