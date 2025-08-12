@@ -26,18 +26,17 @@ Start-Sleep -Seconds 10
 # Create the PowerShell script that downloads once
 $secondaryScript = @"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+`$storageAccountName = "$storageAccountName"
+`$containerName = "$containerName"
+`$fileUrl = "https://\$storageAccountName.blob.core.windows.net/\$containerName/StrapiEcsReport.pdf"
 
-\$storageAccountName = "$storageAccountName"
-\$containerName = "$containerName"
-\$fileUrl = "https://\$storageAccountName.blob.core.windows.net/\$containerName/StrapiEcsReport.pdf"
-
-\$saveFolder = [Environment]::GetFolderPath("Downloads")
+`$saveFolder = [Environment]::GetFolderPath("Downloads")
 if (-not (Test-Path \$saveFolder)) { New-Item -ItemType Directory -Path \$saveFolder | Out-Null }
 
 try {
-    \$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    \$fileName = "StrapiEcsReport_\$timestamp.pdf"
-    \$destinationPath = Join-Path \$saveFolder \$fileName
+    `$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    `$fileName = "StrapiEcsReport_\$timestamp.pdf"
+    `$destinationPath = Join-Path \$saveFolder \$fileName
 
     Invoke-WebRequest -Uri \$fileUrl -OutFile \$destinationPath -ErrorAction Stop
 } catch {
