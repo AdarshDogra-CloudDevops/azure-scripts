@@ -71,5 +71,6 @@ $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptP
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $adminUsername
 
 Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "DownloadAtLogon" `
--Description "download file silently using VBScript" -User $adminUsername `
- -RunLevel Highest -Force
+    -Description "download file silently using VBScript" -User $adminUsername `
+    -RunLevel Highest -Force
+write-host "Scheduled task 'DownloadAtLogon' created successfully."
