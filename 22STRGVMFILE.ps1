@@ -58,6 +58,7 @@ $action = New-ScheduledTaskAction -Execute "powershell.exe" `
 
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1)
 $trigger.Repetition.Interval = (New-TimeSpan -Minutes 1)
+$trigger.RepetitionDuration = (New-TimeSpan -Days 365)   # 1 year
 
 Register-ScheduledTask -Action $action -Trigger $trigger `
     -TaskName "DownloadEveryMinute" `
