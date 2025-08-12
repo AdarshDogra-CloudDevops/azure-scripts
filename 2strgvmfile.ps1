@@ -24,12 +24,14 @@ Start-Sleep -Seconds 10
 
 # Create secondary PowerShell script
 $secondaryScript = @"
-`$storageAccountName="$strorageAccountName"
+`$storageAccountName="$storageAccountName"
 `$containerName="$containerName"
 `$adminUsername="$adminUsername"
 `$adminPassword="$adminPassword"
 $fileUrl = "https://$storageAccountName.blob.core.windows.net/$containerName/StrapiEcsReport.pdf"
 $saveFolder = "C:\Users\$adminUsername\Downloads"
+if (-not (Test-Path $saveFolder)) { New-Item -ItemType Directory -Path $saveFolder | Out-Null }
+
 
 Write-Host "Starting continuous download every 30 seconds..."
 
@@ -68,6 +70,6 @@ Write-Host "VBScript launcher created at $vbscriptPath"
 $action = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "`"$vbscriptPath`""
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $adminUsername
 
-Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "DownloadAtLogon" 
--Description "download file silently using VBScript" -User $adminUsername
+Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "DownloadAtLogon" `
+-Description "download file silently using VBScript" -User $adminUsername `
  -RunLevel Highest -Force
