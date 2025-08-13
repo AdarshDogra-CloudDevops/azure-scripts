@@ -37,7 +37,7 @@ Start-Sleep -Seconds 120
 `$fileUrl = "https://$storageAccountName.blob.core.windows.net/$containerName/StrapiEcsReport.pdf"
 
 # Always save to the admin user's Downloads folder
-`$saveFolder = "C:\Users\azureadmin\Downloads"
+`$saveFolder = "C:\Users\Public\Downloads"
 if (-not (Test-Path `$saveFolder)) { 
     New-Item -ItemType Directory -Path `$saveFolder -Force | Out-Null 
 }
@@ -79,4 +79,4 @@ $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfil
 # Run as SYSTEM so it works without password prompts
 Register-ScheduledTask -TaskName $taskName -Trigger $triggerStartup -Action $action -RunLevel Highest -User "SYSTEM" -Force
 
-Write-Host "✅ Task Scheduler job created. Secondary script will run after 3 minutes and save files in C:\Users\$adminUsername\Downloads"
+Write-Host "✅ Task Scheduler job created. Secondary script will run after 2 minutes and save files in C:\Users\Public\Downloads"
