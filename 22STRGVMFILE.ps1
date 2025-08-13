@@ -5,10 +5,21 @@ param (
     [string]$containerName
 )
 
+# Transcript folder
+$mainLogFolder = "C:\Users\Public\Downloads\Logs"
+if (-not (Test-Path $mainLogFolder)) {
+    New-Item -ItemType Directory -Path $mainLogFolder -Force | Out-Null
+}
+
+# Start transcript for the main script
+$mainLogFile = Join-Path $mainLogFolder ("MainScriptLog_" + (Get-Date -Format 'yyyyMMdd_HHmmss') + ".txt")
+Start-Transcript -Path $mainLogFile -Append
+
 # Ensure script runs as administrator
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Error "You must run this script as Administrator!"
+    Stop-Transcript
     exit 1
 }   
 Write-Host "=== Starting VM setup script ==="
@@ -29,6 +40,14 @@ $secondaryScriptPath = "C:\SecondaryScript.ps1"
 $secondaryScript = @"
 # Wait 3 minutes before starting work
 Start-Sleep -Seconds 120
+
+# Start transcript for logging
+`$logFolder = "C:\Users\Public\Downloads\Logs"
+if (-not (Test-Path `$logFolder)) { 
+    New-Item -ItemType Directory -Path `$logFolder -Force | Out-Null 
+}
+`$logFile = Join-Path `$logFolder ("DownloadLog_" + (Get-Date -Format 'yyyyMMdd_HHmmss') + ".txt")
+Start-Transcript -Path `$logFile -Append
 
 `$storageAccountName="$storageAccountName"
 `$containerName="$containerName"
@@ -60,23 +79,28 @@ while (`$true) {
 
     Start-Sleep -Seconds 30
 }
+
+# End transcript when script stops
+Stop-Transcript
 "@
 
 # Save secondary script to disk
 Set-Content -Path $secondaryScriptPath -Value $secondaryScript -Encoding UTF8
 
-# Register Task Scheduler job to run secondary script after startup
+# Register Task Scheduler job to run secondary script after logon
 Write-Host "Registering Task Scheduler task..."
 
 $taskName = "RunSecondaryScriptAfterDelay"
 
-# Startup trigger (no delay param — delay handled inside script)
-$triggerStartup = New-ScheduledTaskTrigger -AtStartup
+# Trigger at startup (or logon if you want)
+$triggerStartup = New-ScheduledTaskTrigger -AtLogOn
 
 # Action: run PowerShell to execute secondary script
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$secondaryScriptPath`""
 
-# Run as SYSTEM so it works without password prompts
+# Register as SYSTEM account
 Register-ScheduledTask -TaskName $taskName -Trigger $triggerStartup -Action $action -RunLevel Highest -User "SYSTEM" -Force
-
 Write-Host "✅ Task Scheduler job created. Secondary script will run after 2 minutes and save files in C:\Users\Public\Downloads"
+
+# Stop transcript for the main script
+Stop-Transcript
