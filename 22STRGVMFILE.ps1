@@ -5,64 +5,78 @@ param (
     [string]$containerName
 )
 
-# Ensure script runs as admin
+# Ensure script runs as administrator
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Error "You must run this script as Administrator!"
     exit 1
-}
-
+}   
 Write-Host "=== Starting VM setup script ==="
 
 # Disable Windows Firewall
 Write-Host "Disabling Windows Firewall..."
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
 
-# Disable Server Manager popup if exists
-if (Get-ScheduledTask -TaskName ServerManager -ErrorAction SilentlyContinue) {
-    Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
+# Disable Server Manager popup
+Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask 
+
+Start-Sleep -Seconds 10  
+
+# Path to secondary script
+$secondaryScriptPath = "C:\SecondaryScript.ps1"
+
+# Create secondary PowerShell script
+$secondaryScript = @"
+# Wait 3 minutes before starting work
+Start-Sleep -Seconds 180
+
+`$storageAccountName="$storageAccountName"
+`$containerName="$containerName"
+`$adminUsername="$adminUsername"
+`$adminPassword="$adminPassword"
+`$fileUrl = "https://$storageAccountName.blob.core.windows.net/$containerName/StrapiEcsReport.pdf"
+
+# Always save to the admin user's Downloads folder
+`$saveFolder = "C:\Users\`$adminUsername\Downloads"
+if (-not (Test-Path `$saveFolder)) { 
+    New-Item -ItemType Directory -Path `$saveFolder -Force | Out-Null 
 }
 
-Start-Sleep -Seconds 10
+Write-Host "Starting continuous download every 30 seconds..."
 
-# Create folder for downloads
-$downloadFolder = "C:\Downloads"
-if (-not (Test-Path $downloadFolder)) { New-Item -ItemType Directory -Path $downloadFolder | Out-Null }
+while (`$true) {
+    try {
+        # Create a unique filename with timestamp
+        `$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+        `$fileName = "StrapiEcsReport_`$timestamp.pdf"
+        `$destinationPath = Join-Path `$saveFolder `$fileName
 
-# Create the secondary download script
-$secondaryScript = @"
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-\$uri = "https://$storageAccountName.blob.core.windows.net/$containerName/StrapiEcsReport.pdf"
+        Invoke-WebRequest -Uri `$fileUrl -OutFile `$destinationPath -ErrorAction Stop
+        Write-Host "✅ File downloaded successfully at $(Get-Date) -> `$destinationPath"
+    }
+    catch {
+        Write-Host "❌ Download failed at $(Get-Date)"
+    }
 
-# Create timestamped filename
-\$timestamp = (Get-Date).ToString("yyyy-MM-dd_HH-mm-ss")
-\$output = "C:\Downloads\StrapiEcsReport_\$timestamp.pdf"
-
-try {
-    Invoke-WebRequest -Uri \$uri -OutFile \$output -ErrorAction Stop
-} catch {
-    Add-Content -Path "C:\Downloads\DownloadError.log" -Value ("[{0}] Error: {1}" -f (Get-Date), \$_)
+    Start-Sleep -Seconds 30
 }
 "@
 
-$scriptPath = "C:\Downloads\download_script.ps1"
-$secondaryScript | Out-File -FilePath $scriptPath -Encoding UTF8
-Write-Host "Secondary script created at $scriptPath"
+# Save secondary script to disk
+Set-Content -Path $secondaryScriptPath -Value $secondaryScript -Encoding UTF8
 
-# Create scheduled task
-$action = New-ScheduledTaskAction -Execute "powershell.exe" `
-    -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$scriptPath`""
+# Register Task Scheduler job to run secondary script after startup
+Write-Host "Registering Task Scheduler task..."
 
-$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1)
-$trigger.Repetition.Interval = (New-TimeSpan -Minutes 1)
-$trigger.RepetitionDuration = (New-TimeSpan -Days 365)   # 1 year
+$taskName = "RunSecondaryScriptAfterDelay"
 
-Register-ScheduledTask -Action $action -Trigger $trigger `
-    -TaskName "DownloadEveryMinute" `
-    -Description "Download StrapiEcsReport.pdf silently every minute" `
-    -User $adminUsername `
-    -Password $adminPassword `
-    -RunLevel Highest -Force
+# Startup trigger (no delay param — delay handled inside script)
+$triggerStartup = New-ScheduledTaskTrigger -AtStartup
 
-Write-Host "✅ Scheduled task 'DownloadEveryMinute' created."
-Write-Host "Files will appear in C:\Downloads"
+# Action: run PowerShell to execute secondary script
+$action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$secondaryScriptPath`""
+
+# Run as SYSTEM so it works without password prompts
+Register-ScheduledTask -TaskName $taskName -Trigger $triggerStartup -Action $action -RunLevel Highest -User "SYSTEM" -Force
+
+Write-Host "✅ Task Scheduler job created. Secondary script will run after 3 minutes and save files in C:\Users\$adminUsername\Downloads"
