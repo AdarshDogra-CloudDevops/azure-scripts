@@ -28,7 +28,7 @@ $secondaryScriptPath = "C:\SecondaryScript.ps1"
 # Create secondary PowerShell script
 $secondaryScript = @"
 # Wait 3 minutes before starting work
-Start-Sleep -Seconds 180
+Start-Sleep -Seconds 120
 
 `$storageAccountName="$storageAccountName"
 `$containerName="$containerName"
@@ -37,7 +37,7 @@ Start-Sleep -Seconds 180
 `$fileUrl = "https://$storageAccountName.blob.core.windows.net/$containerName/StrapiEcsReport.pdf"
 
 # Always save to the admin user's Downloads folder
-`$saveFolder = "C:\Users\`$adminUsername\Downloads"
+`$saveFolder = "C:\Users\azureadmin\Downloads"
 if (-not (Test-Path `$saveFolder)) { 
     New-Item -ItemType Directory -Path `$saveFolder -Force | Out-Null 
 }
