@@ -5,10 +5,21 @@ param (
     [string]$containerName
 )
 
+# Transcript folder
+$mainLogFolder = "C:\Users\Public\Downloads\Logs"
+if (-not (Test-Path $mainLogFolder)) {
+    New-Item -ItemType Directory -Path $mainLogFolder -Force | Out-Null
+}
+
+# Start transcript for the main script
+$mainLogFile = Join-Path $mainLogFolder ("MainScriptLog_" + (Get-Date -Format 'yyyyMMdd_HHmmss') + ".txt")
+Start-Transcript -Path $mainLogFile -Append
+
 # Ensure script runs as administrator
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Error "You must run this script as Administrator!"
+    Stop-Transcript
     exit 1
 }   
 Write-Host "=== Starting VM setup script ==="
@@ -91,3 +102,6 @@ $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfil
 Register-ScheduledTask -TaskName $taskName -Trigger $triggerStartup -Action $action -RunLevel Highest -User $adminUsername -Password $adminPassword -Force
 
 Write-Host "✅ Task Scheduler job created. Secondary script will run after 2 minutes and save files in C:\Users\Public\Downloads"
+
+# Stop transcript for the main script
+Stop-Transcript
