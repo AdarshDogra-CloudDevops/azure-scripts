@@ -1,6 +1,6 @@
 param (
     [string]$adminUsername,
-    [string]$adminPassword,
+    [securestring]$adminPassword,
     [string]$storageAccountName,
     [string]$containerName
 )
