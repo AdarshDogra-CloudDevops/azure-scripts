@@ -38,7 +38,7 @@ $secondaryScriptPath = "C:\SecondaryScript.ps1"
 
 # Create secondary PowerShell script
 $secondaryScript = @"
-# Wait 3 minutes before starting work
+# Wait 1 minute before starting work
 Start-Sleep -Seconds 60
 
 # Start transcript for logging
