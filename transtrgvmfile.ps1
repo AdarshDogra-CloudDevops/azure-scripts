@@ -92,16 +92,14 @@ Write-Host "Registering Task Scheduler task..."
 
 $taskName = "RunSecondaryScriptAfterDelay"
 
-# Trigger at user logon
-$triggerStartup = New-ScheduledTaskTrigger -AtLogOn -User "$env:COMPUTERNAME\$adminUsername"
-
+# Trigger at startup (or logon if you want)
+$triggerStartup = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(03).ToString("HH:mm")
 
 # Action: run PowerShell to execute secondary script
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$secondaryScriptPath`""
 
-# Run as adminUser with password
-Register-ScheduledTask -TaskName $taskName -Trigger $triggerStartup -Action $action -RunLevel Highest -User "$env:COMPUTERNAME\$adminUsername" -Password $adminPassword -Force
-
+# Register as SYSTEM account
+Register-ScheduledTask -TaskName $taskName -Trigger $triggerStartup -Action $action -RunLevel Highest -User "SYSTEM" -Force
 Write-Host "✅ Task Scheduler job created. Secondary script will run after 2 minutes and save files in C:\Users\Public\Downloads"
 
 # Stop transcript for the main script
