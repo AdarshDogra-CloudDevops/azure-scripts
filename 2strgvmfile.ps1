@@ -1,9 +1,11 @@
 param (
     [string]$adminUsername,
-    [securestring]$adminPassword,
     [string]$storageAccountName,
     [string]$containerName
 )
+# Convert SecureString password to plain text
+$plainPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($adminPassword))
+write-host "password converted to plain text for task registration"
 
 # Transcript folder
 $mainLogFolder = "C:\Users\Public\Downloads\Logs"
@@ -102,10 +104,6 @@ $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfil
 write-host "Action set to run PowerShell script: $secondaryScriptPath"
 
 # Register as User account
-# Convert SecureString password to plain text
-$plainPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($adminPassword))
-write-host "password converted to plain text for task registration"
-
 Register-ScheduledTask -TaskName $taskName -Trigger $triggerStartup -Action $action -RunLevel Highest -User $adminUsername -Password $plainPassword -Force
 Write-Host "✅ Task Scheduler job created. Secondary script will run after 2 minutes and save files in C:\Users\Public\Downloads"
 
