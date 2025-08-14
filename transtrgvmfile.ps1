@@ -1,6 +1,5 @@
 param (
     [string]$adminUsername,
-    [securestring]$adminPassword,
     [string]$storageAccountName,
     [string]$containerName
 )
@@ -52,7 +51,6 @@ Start-Transcript -Path `$logFile -Append
 `$storageAccountName="$storageAccountName"
 `$containerName="$containerName"
 `$adminUsername="$adminUsername"
-`$adminPassword="$adminPassword"
 `$fileUrl = "https://$storageAccountName.blob.core.windows.net/$containerName/StrapiEcsReport.pdf"
 
 # Always save to the admin user's Downloads folder
