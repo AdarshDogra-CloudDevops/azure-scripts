@@ -25,16 +25,17 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 Write-Host "=== Starting VM setup script ==="
 
 # Disable Windows Firewall
-Write-Host "Disabling Windows Firewall..."
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False
+write-host "Disabled Windows Firewall..."
 
 # Disable Server Manager popup
 Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask 
-
 Start-Sleep -Seconds 10  
+write-host "Disabled Server Manager popup..."
 
 # Path to secondary script
 $secondaryScriptPath = "C:\SecondaryScript.ps1"
+write-host "Created secondary script at $secondaryScriptPath"
 
 # Create secondary PowerShell script
 $secondaryScript = @"
@@ -86,17 +87,19 @@ Stop-Transcript
 
 # Save secondary script to disk
 Set-Content -Path $secondaryScriptPath -Value $secondaryScript -Encoding UTF8
+write-host "Secondary script created at $secondaryScriptPath"
 
 # Register Task Scheduler job to run secondary script after logon
 Write-Host "Registering Task Scheduler task..."
-
 $taskName = "RunSecondaryScriptAfterDelay"
 
 # Trigger at startup (or logon if you want)
 $triggerStartup = New-ScheduledTaskTrigger -AtLogOn -User $adminUsername
+write-host "Trigger set to run at logon for user: $adminUsername"
 
 # Action: run PowerShell to execute secondary script
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$secondaryScriptPath`""
+write-host "Action set to run PowerShell script: $secondaryScriptPath"
 
 # Register as User account
 Register-ScheduledTask -TaskName $taskName -Trigger $triggerStartup -Action $action -RunLevel Highest -User $adminUsername -Password $adminPassword -Force
