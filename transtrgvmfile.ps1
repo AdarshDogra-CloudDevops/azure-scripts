@@ -1,6 +1,6 @@
 param (
     [string]$adminUsername,
-    [string]$adminPassword,
+    [securestring]$adminPassword,
     [string]$storageAccountName,
     [string]$containerName
 )
@@ -39,7 +39,7 @@ $secondaryScriptPath = "C:\SecondaryScript.ps1"
 # Create secondary PowerShell script
 $secondaryScript = @"
 # Wait 3 minutes before starting work
-Start-Sleep -Seconds 120
+Start-Sleep -Seconds 60
 
 # Start transcript for logging
 `$logFolder = "C:\Users\Public\Downloads\Logs"
@@ -92,8 +92,8 @@ Write-Host "Registering Task Scheduler task..."
 
 $taskName = "RunSecondaryScriptAfterDelay"
 
-# Trigger at startup (or logon if you want)
-$triggerStartup = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(03).ToString("HH:mm")
+# Trigger at startup after a delay of 2 minutes
+$triggerStartup = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(02).ToString("HH:mm")
 
 # Action: run PowerShell to execute secondary script
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$secondaryScriptPath`""
