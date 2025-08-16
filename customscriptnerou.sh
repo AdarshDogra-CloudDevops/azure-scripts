@@ -1,4 +1,8 @@
 #!/bin/bash 
+
+exec > >(tee -a /var/log/vm-setup.log) 2>&1
+set -x  # optional: prints each command before running
+# This script sets up a new Ubuntu VM with a user, desktop environment, and various tools.
 echo "=== Starting Ubuntu VM setup script "
 
 # Ensure script is run as root
@@ -81,7 +85,7 @@ echo "Wireshark installed and user $USERNAME added to wireshark group."
 echo "🔒 Enabling UFW firewall..."
 ufw allow OpenSSH
 ufw allow 3389/tcp
-ufw enable
+ufw --force enable
 echo "UFW firewall enabled and configured."
 
 echo "🕒 Scheduling auto-shutdown in 15 minutes..."
