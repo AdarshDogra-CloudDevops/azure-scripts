@@ -38,13 +38,13 @@ Start-Sleep -Seconds 5
 
 # Install required applications via Chocolatey
 Write-Host "Installing Google Chrome..."
-choco install googlechrome -y --force --ignore-checksums
+choco install googlechrome -y --force  --ignore-checksums
 
 Write-Host "Installing Visual Studio Code..."
 choco install vscode -y --force
 
 Write-Host "Installing Power BI Desktop..."
-choco install powerbi -y --force --ignore-checksums
+choco install powerbi -y --force  --ignore-checksums
 
 # Stop transcript for the main script
 Stop-Transcript
