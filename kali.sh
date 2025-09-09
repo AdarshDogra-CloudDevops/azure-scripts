@@ -10,6 +10,8 @@ ADMIN_USER=$1
 # ----------------------------
 # Fix Kali repo GPG key issue
 # ----------------------------
+sudo apt-get update -y
+sudo apt-get install -y gnupg2 wget curl
 sudo mkdir -p /etc/apt/trusted.gpg.d
 wget -q -O - https://archive.kali.org/archive-key.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/kali-archive-keyring.gpg > /dev/null
 
