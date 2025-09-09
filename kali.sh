@@ -1,14 +1,21 @@
 #!/bin/bash
 # customscript_kali_gui.sh
-# This script installs Google Chrome + GUI (XFCE) + XRDP on Kali Linux VM
+# Installs Google Chrome + GUI (XFCE) + XRDP on Kali Linux VM
+# Usage: bash customscript_kali_gui.sh <adminUsername>
 
 set -e
 
+ADMIN_USER=$1
+
+# ----------------------------
 # Update system
+# ----------------------------
 sudo apt-get update -y
 sudo apt-get upgrade -y
 
+# ----------------------------
 # Install dependencies
+# ----------------------------
 sudo apt-get install -y wget curl gnupg2 apt-transport-https software-properties-common
 
 # ----------------------------
@@ -29,18 +36,24 @@ sudo apt-get install -y google-chrome-stable
 # ----------------------------
 # Install GUI (XFCE) + XRDP
 # ----------------------------
-# Install XFCE desktop environment
-sudo apt-get install -y kali-desktop-xfce
-
-# Install xrdp for remote desktop access
-sudo apt-get install -y xrdp
+sudo apt-get install -y xfce4 xfce4-goodies xrdp
 
 # Enable and start XRDP service
 sudo systemctl enable xrdp
 sudo systemctl start xrdp
 
 # ----------------------------
+# Desktop shortcut for Chrome
+# ----------------------------
+DESKTOP_PATH="/home/$ADMIN_USER/Desktop"
+mkdir -p "$DESKTOP_PATH"
+
+cp /usr/share/applications/google-chrome.desktop "$DESKTOP_PATH/"
+chmod +x "$DESKTOP_PATH/google-chrome.desktop"
+chown $ADMIN_USER:$ADMIN_USER "$DESKTOP_PATH/google-chrome.desktop"
+
+# ----------------------------
 # Verify installation
 # ----------------------------
 google-chrome --version || echo "Chrome installation failed"
-echo "XFCE and XRDP installation complete"
+echo "✅ XFCE + XRDP + Chrome installation complete"
