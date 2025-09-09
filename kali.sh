@@ -1,24 +1,14 @@
 #!/bin/bash
 # customscript_kali_gui.sh
-# Installs Google Chrome + GUI (XFCE) + XRDP on Kali Linux VM
-# Usage: bash customscript_kali_gui.sh <adminUsername>
-
 set -e
 
 ADMIN_USER=$1
 
 # ----------------------------
-# Install essential tools (gnupg2, wget, curl) first
-# Needed for Kali key and repo access
+# Update and install keyring package first
 # ----------------------------
 sudo apt-get update -y
-sudo apt-get install -y gnupg2 wget curl apt-transport-https software-properties-common
-
-# ----------------------------
-# Fix Kali repo GPG key issue
-# ----------------------------
-sudo mkdir -p /etc/apt/trusted.gpg.d
-wget -q -O - https://archive.kali.org/archive-key.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/kali-archive-keyring.gpg > /dev/null
+sudo apt-get install -y kali-archive-keyring wget curl gnupg2 apt-transport-https software-properties-common
 
 # ----------------------------
 # Update system
