@@ -5,13 +5,13 @@ set -e
 ADMIN_USER=$1
 
 # ----------------------------
-# Update and install keyring package first
+# Install essential packages and Kali keyring
 # ----------------------------
-sudo apt-get update -y
-sudo apt-get install -y kali-archive-keyring wget curl gnupg2 apt-transport-https software-properties-common
+sudo apt-get update -y || true
+sudo apt-get install -y --allow-unauthenticated kali-archive-keyring wget curl gnupg2 apt-transport-https software-properties-common
 
 # ----------------------------
-# Update system
+# Update system now that keyring is trusted
 # ----------------------------
 sudo apt-get update -y
 sudo apt-get upgrade -y
