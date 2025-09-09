@@ -8,10 +8,10 @@ set -e
 sudo apt-get update -y
 
 # Install dependencies
-sudo apt-get install -y wget gnupg2 apt-transport-https software-properties-common
+sudo apt-get install -y wget curl gnupg2 apt-transport-https software-properties-common
 
-# Add Google Chrome repo key
-wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+# Add Google Chrome repo key (modern way, no apt-key)
+curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/google-chrome.gpg
 
 # Add Google Chrome repository
 echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
